@@ -4,107 +4,118 @@ __author__ = 'kehao'
 """
 from tkinter import *
 from tkinter import ttk
-
-root = Tk()
-root.title("雇员信息输入")
-
-mainframe = ttk.Frame(root, padding="3 3 3 3")
-mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
-mainframe.columnconfigure(0, weight=1)
-mainframe.rowconfigure(0, weight=1)
-listframe = ttk.Frame(root, padding='3 3 3 3')
-listframe.grid(column=0, row=1, sticky=(N, W, E, S))
-listframe.columnconfigure(0, weight=1)
-listframe.rowconfigure(0, weight=1)
+import shelve
 
 
-def static_vars(**kwargs):
-    def decorate(func):
-        for k in kwargs:
-            setattr(func, k, kwargs[k])
-        return func
-
-    return decorate
 
 
-@static_vars(line=0)
-def show_one(name, age, position, salary):
-    print("show new line")
-    ttk.Label(listframe, text=name).grid(column=0, row=show_one.line, sticky=(W), padx=10, pady=5)
-    ttk.Label(listframe, text=age).grid(column=1, row=show_one.line, sticky=(W), padx=10, pady=5)
-    ttk.Label(listframe, text=position).grid(column=2, row=show_one.line, sticky=(W), padx=10, pady=5)
-    ttk.Label(listframe, text=salary).grid(column=3, row=show_one.line, sticky=(W), padx=10, pady=5)
-    show_one.line += 1
+
+class GUI:
+    def show_one(self, name, age, position, salary):
+        print("show new line")
+        ttk.Label(self.listframe, text=name).grid(column=0, row=self.line, sticky=(W), padx=10, pady=5)
+        ttk.Label(self.listframe, text=age).grid(column=1, row=self.line, sticky=(W), padx=10, pady=5)
+        ttk.Label(self.listframe, text=position).grid(column=2, row=self.line, sticky=(W), padx=10, pady=5)
+        ttk.Label(self.listframe, text=salary).grid(column=3, row=self.line, sticky=(W), padx=10, pady=5)
+        self.line += 1
+
+    def show_all(self):
+        for key, val in get_all(self.db):
+            obj = val
+            print(val)
+            self.show_one(obj['name'], obj['age'], obj['position'], obj['salary'])
+
+    def insert(self):
+        print('press')
+        key = str(self.line)
+        name = self._name.get()
+        age = self._age.get()
+        position = self._position.get()
+        salary = self._salary.get()
+        obj = dict(
+            name=name,
+            age=age,
+            position=position,
+            salary=salary
+        )
+        print(obj)
+        self.db[key] = obj
+        self.show_one(name, age, position, salary)
+        self.line += 1
+
+    def __init__(self, db):
+        self.db = db
+        dbshow(db)
+        self.line = 0
+        self.root = Tk()
+        self.root.title("雇员信息输入")
+        self.mainframe = ttk.Frame(self.root, padding="3 3 3 3")
+        self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+        self.mainframe.columnconfigure(0, weight=1)
+        self.mainframe.rowconfigure(0, weight=1)
+        self.listframe = ttk.Frame(self.root, padding='3 3 3 3')
+        self.listframe.grid(column=0, row=1, sticky=(N, W, E, S))
+        self.listframe.columnconfigure(0, weight=1)
+        self.listframe.rowconfigure(0, weight=1)
+
+        self._key = StringVar()
+        self._name = StringVar()
+        self._age = StringVar()
+        self._position = StringVar()
+        self._salary = StringVar()
+        """
+        ttk.Label(self.mainframe, text="键值").grid(column=1, row=0, sticky=W)
+        feet_entry = ttk.Entry(self.mainframe, width=10, textvariable=self._key)
+        feet_entry.grid(column=2, row=0, sticky=(E))
+        """
+        ttk.Label(self.mainframe, text="姓名").grid(column=1, row=1, sticky=W)
+        feet_entry = ttk.Entry(self.mainframe, width=10, textvariable=self._name)
+        feet_entry.grid(column=2, row=1, sticky=(E))
+
+        ttk.Label(self.mainframe, text="年龄").grid(column=1, row=2, sticky=W)
+        feet_entry = ttk.Entry(self.mainframe, width=10, textvariable=self._age)
+        feet_entry.grid(column=2, row=2, sticky=(E))
+
+        ttk.Label(self.mainframe, text="职位").grid(column=1, row=3, sticky=W)
+        feet_entry = ttk.Entry(self.mainframe, width=15, textvariable=self._position)
+        feet_entry.grid(column=2, row=3, sticky=(W, E))
+
+        ttk.Label(self.mainframe, text="薪水").grid(column=1, row=4, sticky=W)
+        feet_entry = ttk.Entry(self.mainframe, width=15, textvariable=self._salary)
+        feet_entry.grid(column=2, row=4, sticky=(E))
+
+        ttk.Button(self.mainframe, text="插入雇员", command=self.insert).grid(column=1, row=5, columnspan=2, sticky=E)
+
+        ttk.Button(self.mainframe, text="刷新", command=self.insert).grid(column=1, row=5, columnspan=1, sticky=E)
+
+        for child in self.mainframe.winfo_children():
+            child.grid_configure(padx=10, pady=5)
+        for child in self.listframe.winfo_children():
+            child.grid_configure(padx=10, pady=5)
+        self.show_one('name','age','position','salary')
+        self.show_all()
+        self.root.mainloop()
 
 
-show_one(1, 1, 1, 1)
-show_one(1, 1, 1, 1)
-show_one(1, 1, 1, 1)
+def get_all(database):
+    for key in database:
+        yield key, database[key]
 
 
-def insert():
-    print('press')
-    show_one(1, 1, 1, 1)
+def dbshow(db):
+    print('dbshow:')
+    for key, val in get_all(db):
+        print('key:', key, "val:", val)
 
 
-key = StringVar()
-name = StringVar()
-age = StringVar()
-position = StringVar()
-salary = StringVar()
-
-ttk.Label(mainframe, text="键值").grid(column=1, row=1, sticky=W)
-feet_entry = ttk.Entry(mainframe, width=10, textvariable=key)
-feet_entry.grid(column=2, row=1, sticky=(E))
-
-ttk.Label(mainframe, text="姓名").grid(column=1, row=1, sticky=W)
-feet_entry = ttk.Entry(mainframe, width=10, textvariable=name)
-feet_entry.grid(column=2, row=1, sticky=(E))
-
-ttk.Label(mainframe, text="年龄").grid(column=1, row=2, sticky=W)
-feet_entry = ttk.Entry(mainframe, width=10, textvariable=age)
-feet_entry.grid(column=2, row=2, sticky=(E))
-
-ttk.Label(mainframe, text="职位").grid(column=1, row=3, sticky=W)
-feet_entry = ttk.Entry(mainframe, width=15, textvariable=position)
-feet_entry.grid(column=2, row=3, sticky=(W, E))
-
-ttk.Label(mainframe, text="薪水").grid(column=1, row=4, sticky=W)
-feet_entry = ttk.Entry(mainframe, width=15, textvariable=salary)
-feet_entry.grid(column=2, row=4, sticky=(E))
-
-ttk.Button(mainframe, text="插入雇员", command=insert).grid(column=1, row=5, columnspan=2, sticky=E)
-
-ttk.Button(mainframe, text="刷新", command=insert).grid(column=1, row=5, columnspan=1, sticky=E)
-root.bind('<Return>', show_one(1, 1, 1, 1))
+def main():
+    print('main')
+    DBNAME = 'shelve.db'
+    db = shelve.open(DBNAME, writeback=True)
+    foo = GUI(db)
+    for i, j in get_all(db):
+        print(i, j)
 
 
-class ScrollTxtArea:
-    def __init__(self, root):
-        frame = Frame(root)
-        frame.pack()
-        self.textPad(frame)
-        return
-
-    def textPad(self, frame):
-        # add a frame and put a text area into it
-        textPad = Frame(frame)
-        self.text = Text(textPad, height=50, width=90)
-
-        # add a vertical scroll bar to the text area
-        scroll = Scrollbar(textPad)
-        self.text.configure(yscrollcommand=scroll.set)
-
-        # pack everythingF
-        self.text.pack(side=LEFT)
-        scroll.pack(side=RIGHT, fill=Y)
-        textPad.pack(side=TOP)
-        return
-
-
-for child in mainframe.winfo_children():
-    child.grid_configure(padx=10, pady=5)
-for child in listframe.winfo_children():
-    child.grid_configure(padx=10, pady=5)
-
-root.mainloop()
+if __name__ == '__main__':
+    main()
